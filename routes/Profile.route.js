@@ -79,26 +79,28 @@ profileRouter.get('/:id/file', (req, res) => {
     
 // })
 
-profileRouter.patch("/update/:id",async(req,res)=>{
-    const id = req.params.id;
-    const payload = req.body;
-    const profile=await ProfileModel.findOne({"_id":id})
-    const userID_in_note=profile.userID
-    const userID_making_req=req.body.userID
-    try {
-        if(userID_making_req!==userID_in_note){
-            res.send({"msg":"you are not authorised"})
-        }else{
-            await ProfileModel.findByIdAndUpdate({ "_id": id }, payload)
-        res.send(`updated the profile whose id is ${id}`)
-        }
+ profileRouter.patch('/update/:id', upload.single('file'), async (req, res) => {
+  const id = req.params.id;
+  const payload = req.body;
+  const profile = await ProfileModel.findById(id);
+  const userID_in_note = profile.userID;
+  const userID_making_req = req.body.userID;
+  try {
+    if (userID_making_req !== userID_in_note) {
+      res.send({ msg: 'You are not authorized.' });
+    } else {
+      if (req.file) {
+        payload.file = req.file.buffer;
+      }
+      await ProfileModel.findByIdAndUpdate({ _id: id }, payload);
+      res.send(`Updated the profile whose id is ${id}`);
     }
+  } catch (err) {
+    console.log(err);
+    res.status(500).send('Error updating profile');
+  }
+});
 
-    catch (err) {
-        console.log(err)
-        res.send("err: somthing went wrong")
-    }
-})
 profileRouter.delete("/delete/:id",async(req,res)=>{
     const id = req.params.id;
     const profile=await ProfileModel.findOne({"_id":id})
